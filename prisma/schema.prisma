@@ -1,0 +1,252 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int                   @id @default(autoincrement())
+  name              String
+  email             String                @unique
+  googleId          String?               @unique @map("google_id")
+  avatarUrl         String?               @map("avatar_url")
+  password          String?
+  emailVerifiedAt   DateTime?             @map("email_verified_at")
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
+
+  exercises         Exercise[]
+  workouts          Workout[]
+  trainingSessions  TrainingSession[]
+  assessments       PhysicalAssessment[]
+  achievements      UserAchievement[]
+  personalRecords   PersonalRecord[]
+  streak            UserStreak?
+
+  @@map("users")
+}
+
+model Exercise {
+  id                Int                @id @default(autoincrement())
+  name              String
+  namePt            String             @map("name_pt")
+  description       String?            @db.Text
+  descriptionPt     String?            @map("description_pt") @db.Text
+  muscleGroup       String             @map("muscle_group")
+  secondaryMuscles  Json?              @map("secondary_muscles")
+  equipment         String
+  difficulty        String
+  exerciseType      String             @map("exercise_type")
+  imageUrl          String?            @map("image_url")
+  isCustom          Boolean            @default(false) @map("is_custom")
+  createdBy         Int?               @map("created_by")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  creator           User?              @relation(fields: [createdBy], references: [id])
+  workoutExercises  WorkoutExercise[]
+  sessionExercises  SessionExercise[]
+  personalRecords   PersonalRecord[]
+
+  @@index([muscleGroup])
+  @@index([equipment])
+  @@index([difficulty])
+  @@index([createdBy])
+  @@map("exercises")
+}
+
+model Workout {
+  id                  Int                 @id @default(autoincrement())
+  userId              Int                 @map("user_id")
+  name                String
+  description         String?             @db.Text
+  isAiGenerated       Boolean             @default(false) @map("is_ai_generated")
+  estimatedDurationMin Int?               @map("estimated_duration_min")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises           WorkoutExercise[]
+  sessions            TrainingSession[]
+
+  @@index([userId])
+  @@map("workouts")
+}
+
+model WorkoutExercise {
+  id            Int       @id @default(autoincrement())
+  workoutId     Int       @map("workout_id")
+  exerciseId    Int       @map("exercise_id")
+  order         Int
+  sets          Int       @default(3)
+  reps          String    @default("12")
+  restSeconds   Int       @default(60) @map("rest_seconds")
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  workout       Workout   @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercise      Exercise  @relation(fields: [exerciseId], references: [id])
+
+  @@index([workoutId, order])
+  @@map("workout_exercises")
+}
+
+model TrainingSession {
+  id              Int               @id @default(autoincrement())
+  userId          Int               @map("user_id")
+  workoutId       Int?              @map("workout_id")
+  workoutName     String?           @map("workout_name")
+  startedAt       DateTime          @map("started_at")
+  finishedAt      DateTime?         @map("finished_at")
+  durationSeconds Int?              @map("duration_seconds")
+  status          String            @default("in_progress")
+  notes           String?           @db.Text
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  user            User              @relation(fields: [userId], references: [id])
+  workout         Workout?          @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  exercises       SessionExercise[]
+
+  @@index([userId, status])
+  @@index([userId, startedAt])
+  @@map("training_sessions")
+}
+
+model SessionExercise {
+  id                Int               @id @default(autoincrement())
+  trainingSessionId Int               @map("training_session_id")
+  exerciseId        Int               @map("exercise_id")
+  exerciseName      String            @map("exercise_name")
+  order             Int
+  targetSets        Int               @map("target_sets")
+  targetReps        String            @map("target_reps")
+  startedAt         DateTime?         @map("started_at")
+  finishedAt        DateTime?         @map("finished_at")
+  status            String            @default("pending")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  session           TrainingSession   @relation(fields: [trainingSessionId], references: [id], onDelete: Cascade)
+  exercise          Exercise          @relation(fields: [exerciseId], references: [id])
+  sets              SessionSet[]
+
+  @@index([trainingSessionId])
+  @@map("session_exercises")
+}
+
+model SessionSet {
+  id                Int              @id @default(autoincrement())
+  sessionExerciseId Int              @map("session_exercise_id")
+  setNumber         Int              @map("set_number")
+  repsTarget        Int?             @map("reps_target")
+  repsCompleted     Int?             @map("reps_completed")
+  loadKg            Decimal?         @map("load_kg") @db.Decimal(6, 2)
+  restSeconds       Int?             @map("rest_seconds")
+  rpe               Int?
+  completedAt       DateTime?        @map("completed_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  sessionExercise   SessionExercise  @relation(fields: [sessionExerciseId], references: [id], onDelete: Cascade)
+
+  @@index([sessionExerciseId])
+  @@map("session_sets")
+}
+
+model PhysicalAssessment {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  assessedAt     DateTime  @map("assessed_at") @db.Date
+  weightKg       Decimal?  @map("weight_kg") @db.Decimal(5, 2)
+  heightCm       Decimal?  @map("height_cm") @db.Decimal(5, 1)
+  bodyFatPct     Decimal?  @map("body_fat_pct") @db.Decimal(4, 1)
+  chestCm        Decimal?  @map("chest_cm") @db.Decimal(5, 1)
+  waistCm        Decimal?  @map("waist_cm") @db.Decimal(5, 1)
+  hipCm          Decimal?  @map("hip_cm") @db.Decimal(5, 1)
+  leftArmCm      Decimal?  @map("left_arm_cm") @db.Decimal(5, 1)
+  rightArmCm     Decimal?  @map("right_arm_cm") @db.Decimal(5, 1)
+  leftThighCm    Decimal?  @map("left_thigh_cm") @db.Decimal(5, 1)
+  rightThighCm   Decimal?  @map("right_thigh_cm") @db.Decimal(5, 1)
+  leftCalfCm     Decimal?  @map("left_calf_cm") @db.Decimal(5, 1)
+  rightCalfCm    Decimal?  @map("right_calf_cm") @db.Decimal(5, 1)
+  neckCm         Decimal?  @map("neck_cm") @db.Decimal(5, 1)
+  shoulderCm     Decimal?  @map("shoulder_cm") @db.Decimal(5, 1)
+  forearmCm      Decimal?  @map("forearm_cm") @db.Decimal(5, 1)
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user           User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, assessedAt])
+  @@map("physical_assessments")
+}
+
+model Achievement {
+  id             Int               @id @default(autoincrement())
+  key            String            @unique
+  name           String
+  namePt         String            @map("name_pt")
+  description    String            @db.Text
+  descriptionPt  String            @map("description_pt") @db.Text
+  icon           String
+  category       String
+  thresholdValue Int?              @map("threshold_value")
+  xpReward       Int               @default(0) @map("xp_reward")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id             Int         @id @default(autoincrement())
+  userId         Int         @map("user_id")
+  achievementId  Int         @map("achievement_id")
+  unlockedAt     DateTime    @map("unlocked_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  user           User        @relation(fields: [userId], references: [id])
+  achievement    Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model PersonalRecord {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  exerciseId    Int       @map("exercise_id")
+  loadKg        Decimal   @map("load_kg") @db.Decimal(6, 2)
+  reps          Int
+  achievedAt    DateTime  @map("achieved_at")
+  sessionSetId  Int?      @map("session_set_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user          User      @relation(fields: [userId], references: [id])
+  exercise      Exercise  @relation(fields: [exerciseId], references: [id])
+
+  @@index([userId, exerciseId])
+  @@map("personal_records")
+}
+
+model UserStreak {
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique @map("user_id")
+  currentStreak    Int       @default(0) @map("current_streak")
+  longestStreak    Int       @default(0) @map("longest_streak")
+  lastActivityDate DateTime? @map("last_activity_date") @db.Date
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user             User      @relation(fields: [userId], references: [id])
+
+  @@map("user_streaks")
+}
