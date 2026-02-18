@@ -20,16 +20,17 @@ export class SessionService {
       where.status = status;
     }
 
-    if (date_from) {
+    if (date_from && date_to) {
       where.startedAt = {
-        ...where.startedAt,
+        gte: new Date(date_from),
+        lte: new Date(date_to),
+      };
+    } else if (date_from) {
+      where.startedAt = {
         gte: new Date(date_from),
       };
-    }
-
-    if (date_to) {
+    } else if (date_to) {
       where.startedAt = {
-        ...where.startedAt,
         lte: new Date(date_to),
       };
     }
