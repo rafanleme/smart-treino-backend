@@ -24,8 +24,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
-// Health check
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+// Health check (accessible without authentication)
+app.get('/api/v1/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
 
 // Routes
 app.use('/api/v1/auth', authRoutes);

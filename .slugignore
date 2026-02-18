@@ -1,0 +1,12 @@
+*.md
+*.log
+.git
+.gitignore
+.env.example
+tests/
+cypress/
+.vscode/
+.idea/
+*.test.ts
+*.spec.ts
+coverage/
