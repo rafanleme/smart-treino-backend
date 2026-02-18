@@ -28,5 +28,4 @@ coverage/
 Thumbs.db
 
 # Prisma
-prisma/migrations/
-!prisma/migrations/.gitkeep
+# Note: migrations should be committed to version control
