@@ -23,6 +23,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "prisma": {
+    "seed": "ts-node prisma/seeds/index.ts"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.75.0",
     "@prisma/client": "^5.22.0",
@@ -36,6 +39,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
