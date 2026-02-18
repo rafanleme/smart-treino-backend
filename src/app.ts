@@ -11,6 +11,7 @@ import workoutRoutes from './modules/workouts/workout.routes';
 import sessionRoutes from './modules/sessions/session.routes';
 import assessmentRoutes from './modules/assessments/assessment.routes';
 import gamificationRoutes from './modules/gamification/gamification.routes';
+import aiRoutes from './modules/ai/ai.routes';
 import { SessionController } from './modules/sessions/session.controller';
 import { AssessmentController } from './modules/assessments/assessment.controller';
 
@@ -63,7 +64,7 @@ sessionSetRouter.put('/:setId', asyncHandler(sessionController.updateSet));
 
 app.use('/api/v1/session-exercises', sessionExerciseRouter);
 app.use('/api/v1/session-sets', sessionSetRouter);
-// app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/ai', aiRoutes);
 
 app.use(errorHandler);
 
