@@ -48,7 +48,7 @@ export class AiService {
 
     // Call Anthropic API
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 4096,
       messages: [
         {
@@ -92,7 +92,7 @@ export class AiService {
 
     // Call Anthropic API
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       messages: [
         {
