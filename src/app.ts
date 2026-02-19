@@ -1,5 +1,7 @@
 import express, { Router } from 'express';
 import cors from 'cors';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import passport from './config/passport';
 import { errorHandler } from './middlewares/errorHandler';
 import { corsConfig } from './middlewares/cors';
@@ -20,19 +22,49 @@ const assessmentController = new AssessmentController();
 
 const app = express();
 
+// Compression middleware
+app.use(compression());
+
+// Rate limiting: 60 requests per minute per IP
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // limit each IP to 60 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api', limiter);
+
 app.use(cors(corsConfig));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
 // Health check (accessible without authentication)
-app.get('/api/v1/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
+app.get('/api/v1/health', async (req, res) => {
+  try {
+    // Check database connection
+    const prisma = (await import('./config/database')).default;
+    await prisma.$queryRaw`SELECT 1`;
+
+    res.json({
+      status: 'healthy',
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      database: 'connected',
+      uptime: process.uptime(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'unhealthy',
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      database: 'disconnected',
+      error: 'Database connection failed',
+    });
+  }
 });
 
 // Routes

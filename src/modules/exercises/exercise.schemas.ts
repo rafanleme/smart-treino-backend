@@ -72,7 +72,7 @@ export const exerciseQuerySchema = z.object({
   perPage: z
     .string()
     .optional()
-    .transform((val) => Math.min(parseInt(val || '20', 10), 100)),
+    .transform((val) => Math.min(parseInt(val || '20', 10), 500)),
   page: z
     .string()
     .optional()
