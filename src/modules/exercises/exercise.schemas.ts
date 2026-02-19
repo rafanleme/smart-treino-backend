@@ -59,25 +59,38 @@ export const updateExerciseSchema = z.object({
 });
 
 // Query params for index
-export const exerciseQuerySchema = z.object({
-  muscleGroup: muscleGroupEnum.optional(),
-  equipment: equipmentEnum.optional(),
-  difficulty: difficultyEnum.optional(),
-  exerciseType: exerciseTypeEnum.optional(),
-  search: z.string().optional(),
-  includeCustom: z
-    .string()
-    .optional()
-    .transform((val) => val !== 'false'),
-  perPage: z
-    .string()
-    .optional()
-    .transform((val) => Math.min(parseInt(val || '20', 10), 500)),
-  page: z
-    .string()
-    .optional()
-    .transform((val) => parseInt(val || '1', 10)),
-});
+// Accept snake_case from frontend, transform to camelCase for service layer
+export const exerciseQuerySchema = z
+  .object({
+    muscle_group: muscleGroupEnum.optional(),
+    equipment: equipmentEnum.optional(),
+    difficulty: difficultyEnum.optional(),
+    exercise_type: exerciseTypeEnum.optional(),
+    search: z.string().optional(),
+    include_custom: z
+      .string()
+      .optional()
+      .transform((val) => val !== 'false'),
+    per_page: z
+      .string()
+      .optional()
+      .transform((val) => Math.min(parseInt(val || '20', 10), 500)),
+    page: z
+      .string()
+      .optional()
+      .transform((val) => parseInt(val || '1', 10)),
+  })
+  .transform((data) => ({
+    // Transform to camelCase for service layer
+    muscleGroup: data.muscle_group,
+    equipment: data.equipment,
+    difficulty: data.difficulty,
+    exerciseType: data.exercise_type,
+    search: data.search,
+    includeCustom: data.include_custom,
+    perPage: data.per_page,
+    page: data.page,
+  }));
 
 // Types
 export type StoreExerciseInput = z.infer<typeof storeExerciseSchema>;
