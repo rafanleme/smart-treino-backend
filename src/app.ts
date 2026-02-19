@@ -28,7 +28,7 @@ app.use(compression());
 // Rate limiting: 60 requests per minute per IP
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 60, // limit each IP to 60 requests per windowMs
+  max: 600, // limit each IP to 60 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
