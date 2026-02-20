@@ -69,4 +69,40 @@ passport.use(
   )
 );
 
+// JWT Refresh Strategy - accepts recently expired tokens (< 7 days)
+// Note: This strategy is not currently used. See refreshAuth middleware instead.
+passport.use(
+  'jwt-refresh',
+  new JwtStrategy(
+    {
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      secretOrKey: env.JWT_SECRET,
+      ignoreExpiration: true, // Accept expired tokens
+    },
+    async (payload, done) => {
+      try {
+        // Validate that token hasn't expired too long ago (< 7 days)
+        const exp = payload.exp * 1000; // Convert to milliseconds
+        const now = Date.now();
+        const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+        const timeSinceExpiry = now - exp;
+
+        if (timeSinceExpiry > sevenDaysInMs) {
+          return done(null, false); // Token expired too long ago
+        }
+
+        // Find user
+        const user = await prisma.user.findUnique({
+          where: { id: payload.userId },
+        });
+
+        if (!user) return done(null, false);
+        return done(null, user);
+      } catch (error) {
+        return done(error, false);
+      }
+    }
+  )
+);
+
 export default passport;
