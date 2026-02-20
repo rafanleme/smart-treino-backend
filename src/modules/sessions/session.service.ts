@@ -140,6 +140,7 @@ export class SessionService {
           order: we.order,
           targetSets: we.sets,
           targetReps: we.reps,
+          restSeconds: we.restSeconds,
           status: 'pending',
         })),
       });

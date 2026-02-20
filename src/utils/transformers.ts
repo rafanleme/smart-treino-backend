@@ -131,6 +131,7 @@ export function transformSessionExercise(sessionExercise: any) {
     order: sessionExercise.order,
     target_sets: sessionExercise.targetSets,
     target_reps: sessionExercise.targetReps,
+    rest_seconds: sessionExercise.restSeconds,
     started_at: sessionExercise.startedAt,
     finished_at: sessionExercise.finishedAt,
     status: sessionExercise.status,
