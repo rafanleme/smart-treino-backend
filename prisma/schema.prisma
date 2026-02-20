@@ -125,6 +125,7 @@ model SessionExercise {
   order             Int
   targetSets        Int               @map("target_sets")
   targetReps        String            @map("target_reps")
+  restSeconds       Int?              @map("rest_seconds")
   startedAt         DateTime?         @map("started_at")
   finishedAt        DateTime?         @map("finished_at")
   status            String            @default("pending")
