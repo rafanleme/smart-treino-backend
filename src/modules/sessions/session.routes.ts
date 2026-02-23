@@ -12,6 +12,7 @@ router.use(authenticate);
 // Training Session CRUD (sessions resource)
 router.get('/', asyncHandler(sessionController.index));
 router.post('/', asyncHandler(sessionController.store));
+router.get('/active', asyncHandler(sessionController.active)); // BEFORE /:id to avoid conflict
 router.get('/:id', asyncHandler(sessionController.show));
 router.put('/:id', asyncHandler(sessionController.update));
 router.delete('/:id', asyncHandler(sessionController.destroy));

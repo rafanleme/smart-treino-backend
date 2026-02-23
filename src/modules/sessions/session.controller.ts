@@ -41,6 +41,18 @@ export class SessionController {
     res.json({ data: transformTrainingSession(session) });
   }
 
+  async active(req: Request, res: Response) {
+    const session = await sessionService.findActiveByUser(req.user!.id);
+
+    if (!session) {
+      return res.status(404).json({
+        message: 'Nenhuma sessão ativa encontrada',
+      });
+    }
+
+    res.json({ data: transformTrainingSession(session) });
+  }
+
   async store(req: Request, res: Response) {
     const data = storeTrainingSessionSchema.parse(req.body);
     const session = await sessionService.create(req.user!.id, data);

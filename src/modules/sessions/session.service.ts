@@ -1,5 +1,6 @@
 import prisma from '../../config/database';
 import { AppError } from '../../utils/errors';
+import { transformTrainingSession } from '../../utils/transformers';
 import type {
   StoreTrainingSessionInput,
   UpdateTrainingSessionInput,
@@ -99,7 +100,45 @@ export class SessionService {
     };
   }
 
+  async findActiveByUser(userId: number) {
+    const session = await prisma.trainingSession.findFirst({
+      where: {
+        userId,
+        status: 'in_progress',
+      },
+      orderBy: { startedAt: 'desc' },
+      include: {
+        exercises: {
+          include: {
+            exercise: true,
+            sets: { orderBy: { setNumber: 'asc' } },
+          },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (!session) return null;
+
+    return {
+      ...session,
+      summary: this.calculateSummary(session),
+    };
+  }
+
   async create(userId: number, data: StoreTrainingSessionInput) {
+    // Check for existing active session FIRST
+    const existingSession = await this.findActiveByUser(userId);
+
+    if (existingSession) {
+      throw new AppError(
+        'Você já tem um treino ativo',
+        400,
+        true,
+        { session: transformTrainingSession(existingSession) }
+      );
+    }
+
     // Verify workout exists and belongs to user
     const workout = await prisma.workout.findUnique({
       where: { id: data.workout_id },
